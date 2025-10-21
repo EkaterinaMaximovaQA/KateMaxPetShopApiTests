@@ -5,7 +5,6 @@ BASE_URL = "http://5.181.109.28:9090/api/v3"
 
 @pytest.fixture(scope="function")
 #фикстура для создания питомца.
-
 def create_pet():
     payload = {"id": 1,
                    "name": "Buddy",
