@@ -1,3 +1,4 @@
+from http.client import responses
 import allure
 import jsonschema
 import requests
@@ -68,7 +69,7 @@ class TestPet:
     @allure.title("добавление нового питомца с подготовкой полных данных")
     def test_add_new_whole_pet(self):
         with allure.step("подготовка  всех данных для создания питомца"):
-            payload = payload = {"id": 10,
+            payload =  {"id": 10,
                        "name": "doggie",
                        "category":{
                            "id": 1,
@@ -96,3 +97,61 @@ class TestPet:
             assert response_json["tags"] == payload["tags"]
             for tag in payload["tags"]:
                 assert tag in response_json["tags"]
+
+
+
+    @allure.title("получение информации о питомце по ID")
+    def test_get_pet_by_id(self, create_pet):
+        with allure.step("Получение ID созданного питомца"):
+            pet_id = create_pet["id"]
+
+        with allure.step("отправка запроса на получение информации о питомце по ID"):
+            response = requests.get(f"{BASE_URL}/pet/{pet_id}")
+
+        with allure.step("проверка статуса  ответа и данных питомца"):
+            assert response.status_code == 200
+            assert response.json()["id"] == pet_id
+
+
+    @allure.title("Обновление информации о питомце ")
+    def test_update_pet_information(self, create_pet):
+        with allure.step("Получение ID  питомца"):
+            pet_id = create_pet["id"]
+
+        with allure.step("подготовка данных для обновления информации питомца"):
+            payload = {"id": pet_id,
+                       "name": "Buddy Updated",
+                       "status": "sold"
+                       }
+        with allure.step("отправка запроса на питомца с обновленными  данными"):
+            response = requests.put(url=f"{BASE_URL}/pet", json=payload)
+            response_json = response.json()
+
+        with allure.step("проверка статуса  ответа и обновленных данных питомца"):
+            assert response.status_code == 200
+            assert response_json["id"] == payload["id"]
+            assert response_json["name"] == payload["name"]
+            assert response_json["status"] == payload["status"]
+
+
+
+
+
+    @allure.title("Удаление питомца по ID")
+    def test_delete_pet_by_id(self, create_pet):
+        with allure.step("Получение ID  питомца из ответа"):
+            pet_id = create_pet["id"]
+
+        with allure.step("удаление питомца"):
+            response = requests.delete(url=f"{BASE_URL}/pet/{pet_id}")
+
+
+        with allure.step("проверка статуса  ответа"):
+            assert response.status_code == 200
+
+        with allure.step("отправка запроса на уделенного питомца"):
+            response = requests.get(url=f"{BASE_URL}/pet/{pet_id}")
+
+
+        with allure.step("проверка статуса  ответа"):
+            assert response.status_code == 404
